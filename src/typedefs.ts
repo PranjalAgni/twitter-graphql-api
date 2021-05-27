@@ -2,8 +2,11 @@ import { gql } from "apollo-server";
 
 export default gql`
   type Query {
-    createTweet(tweets: [CreateTweetInput!]!): [TweetCreated!]!
     getTweets(tweetId: String!): [TweetCreated]!
+  }
+
+  type Mutation {
+    createTweet(tweets: [CreateTweetInput!]!): [TweetCreated!]!
     createUser(user: CreateUserInput): User!
   }
 

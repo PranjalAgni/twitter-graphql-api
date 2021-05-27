@@ -1,41 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Document } from "mongoose";
-import User, { IUser } from "./models/User";
-import { CreateUser, CreateTweet } from "./interfaces/";
-import { LeanDocument } from "mongoose";
+import { Document, LeanDocument } from "mongoose";
+import { CreateTweet, CreateUser } from "./interfaces/";
 import Tweet, { ITweet } from "./models/Tweet";
-import { formatError } from "graphql";
+import User, { IUser } from "./models/User";
 
 export default {
   Query: {
-    createTweet: async (
-      _parent: never,
-      args: { tweets: CreateTweet[] }
-    ): Promise<LeanDocument<ITweet>[]> => {
-      try {
-        const tweet = new Tweet();
-        const tweetList = args.tweets;
-        const [parentTweet, ...remaningTweet] = tweetList;
-        const { description, userId } = parentTweet;
-        tweet.description = description;
-        tweet.userId = userId;
-        let savedTweet = await tweet.save();
-        let childTweets: (ITweet & Document<string, unknown>)[] = [];
-        if (remaningTweet) {
-          childTweets = await Tweet.insertMany(remaningTweet);
-          const childTweetsId: string[] = childTweets.map((tweet) => tweet._id);
-
-          savedTweet = await Tweet.findByIdAndUpdate(
-            { _id: savedTweet._id },
-            { threadId: childTweetsId }
-          );
-        }
-
-        return [savedTweet, ...childTweets].map((doc) => doc.toObject());
-      } catch (ex) {
-        console.error(ex);
-      }
-    },
     getTweets: async (
       _parent: never,
       args: { tweetId: string }
@@ -58,18 +28,47 @@ export default {
       } catch (ex) {
         console.error(ex);
       }
-    },
+    }
+  },
+  Mutation: {
     createUser: async (
       _parent: never,
       args: { user: CreateUser }
     ): Promise<LeanDocument<IUser>> => {
       try {
         const { username, phoneNumber } = args.user;
-        const user = new User();
-        user.username = username;
-        user.phoneNumber = phoneNumber;
+        const user = new User({ username, phoneNumber });
         const userCreated = await user.save();
         return userCreated.toObject();
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+    createTweet: async (
+      _parent: never,
+      args: { tweets: CreateTweet[] }
+    ): Promise<LeanDocument<ITweet>[]> => {
+      try {
+        const tweetList = args.tweets;
+        const [parentTweet, ...remaningTweet] = tweetList;
+        const { description, userId } = parentTweet;
+        const tweet = new Tweet({
+          description,
+          userId
+        });
+        let savedTweet = await tweet.save();
+        let childTweets: (ITweet & Document<string, unknown>)[] = [];
+        if (remaningTweet) {
+          childTweets = await Tweet.insertMany(remaningTweet);
+          const childTweetsId: string[] = childTweets.map((tweet) => tweet._id);
+
+          savedTweet = await Tweet.findByIdAndUpdate(
+            { _id: savedTweet._id },
+            { threadId: childTweetsId }
+          );
+        }
+
+        return [savedTweet, ...childTweets].map((doc) => doc.toObject());
       } catch (ex) {
         console.error(ex);
       }
