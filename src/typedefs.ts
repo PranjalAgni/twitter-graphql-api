@@ -3,6 +3,7 @@ import { gql } from "apollo-server";
 export default gql`
   type Query {
     getTweets(tweetId: String!): [TweetCreated]!
+    convertRomanNumberToNumeral(romanNumber: String!): String!
   }
 
   type Mutation {

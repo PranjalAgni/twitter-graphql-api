@@ -28,6 +28,43 @@ export default {
       } catch (ex) {
         console.error(ex);
       }
+    },
+    convertRomanNumberToNumeral: (
+      _parent: never,
+      args: { romanNumber: string }
+    ): string => {
+      const { romanNumber } = args;
+      let numeralNumber = 0;
+      try {
+        const romanToNumeralMap: { [key: string]: number } = {
+          i: 1,
+          v: 5,
+          x: 10
+        };
+
+        const length = romanNumber.length;
+        for (let idx = 0; idx < length; idx++) {
+          const romanChar = romanNumber[idx];
+          const numeralValue = romanToNumeralMap[romanChar];
+          let currentValue = 0;
+          const isNext = idx + 1 < length;
+
+          if (romanChar === "i" && isNext && romanNumber[idx + 1] !== "i") {
+            const nextNumeralValue = romanToNumeralMap[romanNumber[idx + 1]];
+            currentValue = Math.abs(numeralValue - nextNumeralValue);
+            idx += 1;
+          } else {
+            currentValue = numeralValue;
+          }
+
+          console.log("Current iteration result: ", currentValue);
+          numeralNumber += currentValue;
+        }
+      } catch (ex) {
+        console.error(ex);
+      }
+
+      return numeralNumber.toString();
     }
   },
   Mutation: {
